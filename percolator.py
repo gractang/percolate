@@ -1,4 +1,3 @@
-# this is in percolation.
 import random
 import itertools
 import copy
@@ -42,6 +41,66 @@ class PercolationPlayer:
         # Remove all isolated vertices.
         to_remove = {u for u in graph.V if len(PercolationPlayer.IncidentEdges(graph, u)) == 0}
         graph.V.difference_update(to_remove)
+
+    def EvalColor(graph, player, node):
+        score = 0
+        neighbors = PercolationPlayer.Neighbors(graph, node)
+        for neighbor in neighbors:
+            if neighbor.color == player:
+                score += 3
+            elif neighbor.color == 1 - player:
+                score += 1
+            else:
+                score += 2
+        score += len(PercolationPlayer.IncidentEdges(graph, node))
+        return score
+
+    # tried to a heuristic with color state then implement minimax.
+    # it didn't really improve the percentage.
+    # def EvalColorState(graph, player): 
+    #     player_nodes = [v for v in graph.V if v.color == player]
+    #     other_nodes = [v for v in graph.V if v.color == 1-player]
+    #     pscore = 0
+    #     oscore = 0
+    #     for v in player_nodes:
+    #         pscore += PercolationPlayer.EvalColor(graph, player, v)
+    #     for v in other_nodes:
+    #         oscore += PercolationPlayer.EvalColor(graph, player, v)
+    #     return pscore-oscore
+
+    # def Minicolor(graph, player, maxTurn): 
+    #     valids = [v for v in graph.V if (v.color == -1 and 
+    #               len(PercolationPlayer.IncidentEdges(graph, v)))]
+    #     if not valids: 
+    #         if maxTurn:
+    #             return (PercolationPlayer.EvalColorState(graph, player), None) 
+    #         else: 
+    #             return (PercolationPlayer.EvalColorState(graph, player), None)
+        
+    #     if maxTurn:
+    #         bestVal = -sys.maxsize - 1
+    #         klex = None
+    #         for v in valids:
+    #             new_graph = copy.deepcopy(graph)
+    #             new_v = PercolationPlayer.GetVertex(new_graph, v.index)
+    #             new_v.color = player
+    #             value = PercolationPlayer.Minicolor(new_graph, 1 - player, not maxTurn)[0]
+    #             if bestVal <= value:
+    #                 bestVal = value
+    #                 klex = v
+    #         return (bestVal, klex)
+    #     else:
+    #         bestVal = sys.maxsize
+    #         aonas = None
+    #         for v in valids:
+    #             new_graph = copy.deepcopy(graph)
+    #             new_v = PercolationPlayer.GetVertex(new_graph, v.index)
+    #             new_v.color = 1-player
+    #             value = PercolationPlayer.Minicolor(new_graph, 1 - player, not maxTurn)[0]
+    #             if bestVal <= value:
+    #                 bestVal = value
+    #                 aonas = v
+    #         return (bestVal, aonas)
 
     def Minimax(player, graph, maxTurn): 
         valids = [v for v in graph.V if v.color == player]
@@ -104,22 +163,14 @@ class PercolationPlayer:
             score -= 1
         return score
 
-    def EvalColor(graph, player, node):
-        score = 0
-        neighbors = PercolationPlayer.Neighbors(graph, node)
-        for neighbor in neighbors:
-            if neighbor.color == player:
-                score += 3
-            elif neighbor.color == 1 - player:
-                score += 1
-            else:
-                score += 2
-        score += len(PercolationPlayer.IncidentEdges(graph, node))
-        return score
-
-
     def ChooseVertexToColor(graph, player):
         highscore = -sys.maxsize - 1
+
+        # num_nodes = len(graph.V)
+        # if num_nodes < 10: 
+        #     node = PercolationPlayer.Minicolor(graph, player, False)[1]
+        #     return node if node else random.choice([v for v in graph.V if v.color == -1])
+
         v_to_c = None
         for v in graph.V:
             if v.color == -1:
@@ -133,10 +184,6 @@ class PercolationPlayer:
         #supposely min value
         num_nodes = len(graph.V)
         if num_nodes < 10:
-            value, vertex = PercolationPlayer.Minimax(player, graph, False)
-            # print(vertex)
-            # print(graph)
-
             return PercolationPlayer.Minimax(player, graph, False)[2-1]
 
         highscore = -sys.maxsize - 1
